@@ -23,31 +23,43 @@ MODE="${1:-new}"
 
 STATUS=0
 
-# Helper to execute tests and log results
 run_vitest() {
   local project="$1"
   local target="${2:-}"
   local xml_out="${3:-$OUTPUT_PATH}"
   
+  # Resolve output path to absolute since we execute inside a subdirectory
+  local abs_xml_out=""
   if [ -n "$xml_out" ]; then
-    if [ -n "$target" ]; then
-      vitest run "$target" --reporter=junit --outputFile="$xml_out"
-    else
-      vitest run --project "$project" --reporter=junit --outputFile="$xml_out"
-    fi
-  else
-    if [ -n "$target" ]; then
-      vitest run "$target"
-    else
-      vitest run --project "$project"
-    fi
+    abs_xml_out=$(readlink -f "$xml_out" 2>/dev/null || realpath "$xml_out")
   fi
+  
+  (
+    cd apps/desktop
+    # Strip apps/desktop/ prefix if present to match the vitest directory context
+    local rel_target="${target#apps/desktop/}"
+    
+    if [ -n "$abs_xml_out" ]; then
+      if [ -n "$rel_target" ]; then
+        vitest run "$rel_target" --reporter=junit --outputFile="$abs_xml_out"
+      else
+        vitest run --project "$project" --reporter=junit --outputFile="$abs_xml_out"
+      fi
+    else
+      if [ -n "$rel_target" ]; then
+        vitest run "$rel_target"
+      else
+        vitest run --project "$project"
+      fi
+    fi
+  )
   
   local val=$?
   if [ $val -ne 0 ]; then
     STATUS=$val
   fi
 }
+
 
 run_pytest() {
   # Run pytest with all target arguments and the output path
