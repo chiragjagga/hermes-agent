@@ -41,17 +41,20 @@ run_vitest() {
     
     if [ -n "$abs_xml_out" ]; then
       if [ -n "$rel_target" ]; then
-        vitest run "$rel_target" --reporter=junit --outputFile="$abs_xml_out"
+        npx vitest run "$rel_target" --reporter=junit --outputFile="$abs_xml_out"
       else
-        vitest run --project "$project" --reporter=junit --outputFile="$abs_xml_out"
+        npx vitest run --project "$project" --reporter=junit --outputFile="$abs_xml_out"
       fi
     else
       if [ -n "$rel_target" ]; then
-        vitest run "$rel_target"
+        npx vitest run "$rel_target"
       else
-        vitest run --project "$project"
+        npx vitest run --project "$project"
       fi
     fi
+
+
+
   )
   
   local val=$?
