@@ -26,6 +26,12 @@ STATUS=0
 # Ensure node_modules/.bin (both local and container root fallbacks) are in the PATH
 export PATH="/node_modules/.bin:./node_modules/.bin:${PATH}"
 
+echo "DEBUG: PATH is $PATH"
+echo "DEBUG: Listing /node_modules/.bin contents:"
+ls -la /node_modules/.bin || echo "DEBUG: /node_modules/.bin not found"
+echo "DEBUG: Listing ./node_modules/.bin contents:"
+ls -la ./node_modules/.bin || echo "DEBUG: ./node_modules/.bin not found"
+
 run_vitest() {
   local project="$1"
   local target="${2:-}"
