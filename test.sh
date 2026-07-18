@@ -42,10 +42,8 @@ run_vitest() {
 }
 
 run_pytest() {
-  local target="$1"
-  local xml_out="${2:-$OUTPUT_PATH}"
-  
-  pytest "$target" -v --junitxml="$xml_out"
+  # Run pytest with all target arguments and the output path
+  pytest "$@" -v --junitxml="$OUTPUT_PATH"
   local val=$?
   if [ $val -ne 0 ]; then
     STATUS=$val
@@ -58,9 +56,17 @@ case "$MODE" in
     # Run the existing electron native test suite
     run_vitest "electron" "" "$OUTPUT_PATH"
     
-    # Run the existing python unit tests in the blast radius of constants, logging, state, and CLI
-    run_pytest "tests/test_hermes_constants.py tests/test_hermes_logging.py tests/test_hermes_state.py tests/hermes_cli/" "$OUTPUT_PATH"
+    # Run the existing python unit tests in the blast radius of constants, logging, state, and CLI routing
+    run_pytest \
+      "tests/test_hermes_constants.py" \
+      "tests/test_hermes_logging.py" \
+      "tests/test_hermes_state.py" \
+      "tests/test_hermes_home_profile_warning.py" \
+      "tests/test_subprocess_home_isolation.py" \
+      "tests/hermes_cli/test_commands.py" \
+      "tests/hermes_cli/test_subparser_routing_fallback.py"
     ;;
+
 
   new)
     echo "Running new feature verification tests..."
@@ -69,7 +75,7 @@ case "$MODE" in
     run_vitest "electron" "apps/desktop/electron/userdata-override.test.ts" "$OUTPUT_PATH"
     
     # 2. Run the custom python path resolution and migration tests
-    run_pytest "tests/test_userdata_override.py" "$OUTPUT_PATH"
+    run_pytest "tests/test_userdata_override.py"
     ;;
   *)
     echo "unknown mode: $MODE (expected base or new)" >&2
