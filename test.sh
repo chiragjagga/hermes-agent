@@ -34,7 +34,7 @@ run_vitest() {
     else
       echo "=== DEBUG: Listing apps/desktop/electron/ ==="
       ls -la apps/desktop/electron/ || echo "Directory apps/desktop/electron/ not found!"
-      npx vitest run --environment=node "apps/desktop/electron/**/*.test.ts" "apps/desktop/scripts/**/*.test.ts" --reporter=default --reporter=junit --outputFile="$xml_out"
+      npx vitest run --environment=node apps/desktop/electron apps/desktop/scripts --reporter=default --reporter=junit --outputFile="$xml_out"
     fi
   else
     if [ -n "$target" ]; then
@@ -42,9 +42,10 @@ run_vitest() {
     else
       echo "=== DEBUG: Listing apps/desktop/electron/ ==="
       ls -la apps/desktop/electron/ || echo "Directory apps/desktop/electron/ not found!"
-      npx vitest run --environment=node "apps/desktop/electron/**/*.test.ts" "apps/desktop/scripts/**/*.test.ts"
+      npx vitest run --environment=node apps/desktop/electron apps/desktop/scripts
     fi
   fi
+
   
   local val=$?
   if [ $val -ne 0 ]; then
