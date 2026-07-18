@@ -16,6 +16,8 @@ jobs:
         run: |
           docker build -f Dockerfile.verify -t verify-runner .
 
+
+
       - name: Run Existing Tests (Base Regression)
         run: |
           docker run --rm --network none -v ${{ github.workspace }}:/app -v /app/node_modules verify-runner bash ./test.sh --output_path results.xml base
