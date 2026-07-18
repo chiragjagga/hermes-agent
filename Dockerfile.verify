@@ -10,12 +10,12 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
 
-RUN pip3 install --no-cache-dir uv --break-system-packages || pip3 install --no-cache-dir uv
+RUN pip3 install --no-cache-dir uv==0.1.45 --break-system-packages || pip3 install --no-cache-dir uv==0.1.45
 
-COPY package.json package-lock.json* pyproject.toml uv.lock* setup.py* ./
-RUN mkdir -p agent tools hermes_cli gateway tui_gateway cron acp_adapter plugins providers tests
+COPY . .
 
 RUN uv pip install --system -e ".[dev]" || uv pip install --break-system-packages -e ".[dev]"
-RUN npm install vitest && npm config set offline true
+RUN npm ci && npm config set offline true
 
 CMD ["/bin/bash"]
+

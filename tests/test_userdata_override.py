@@ -13,8 +13,8 @@ def test_hermes_home_honor_explicit_hermes_home(monkeypatch):
         monkeypatch.setenv("HERMES_HOME", tmp1)
         monkeypatch.setenv("HERMES_USERDATA", tmp2)
         
-        from hermes_constants import _hermes_home_from_env
-        resolved = _hermes_home_from_env()
+        from hermes_constants import get_hermes_home
+        resolved = get_hermes_home()
         assert resolved == Path(tmp1)
 
 def test_hermes_home_fallback_to_userdata(monkeypatch):
@@ -23,8 +23,8 @@ def test_hermes_home_fallback_to_userdata(monkeypatch):
     with tempfile.TemporaryDirectory() as tmpdir:
         monkeypatch.setenv("HERMES_USERDATA", tmpdir)
         
-        from hermes_constants import _hermes_home_from_env
-        resolved = _hermes_home_from_env()
+        from hermes_constants import get_hermes_home
+        resolved = get_hermes_home()
         assert resolved == Path(tmpdir) / "hermes-home"
 
 def test_hermes_home_normalization(monkeypatch):
@@ -33,8 +33,8 @@ def test_hermes_home_normalization(monkeypatch):
     relative_path = "./custom_test_dir_relative"
     monkeypatch.setenv("HERMES_USERDATA", relative_path)
     
-    from hermes_constants import _hermes_home_from_env
-    resolved = _hermes_home_from_env()
+    from hermes_constants import get_hermes_home
+    resolved = get_hermes_home()
     assert resolved.is_absolute()
     assert resolved == Path(relative_path).resolve() / "hermes-home"
 
@@ -87,9 +87,16 @@ def test_migration_atomic_success():
         metadata_file = dest / ".metadata.json"
         assert metadata_file.exists()
         import json
+        import datetime
         with open(metadata_file, "r", encoding="utf-8") as f:
             meta = json.load(f)
         assert "migration_timestamp" in meta
+        # Verify valid ISO-8601 format by parsing it
+        try:
+            datetime.datetime.fromisoformat(meta["migration_timestamp"].replace("Z", "+00:00"))
+        except ValueError:
+            pytest.fail("migration_timestamp is not in valid ISO-8601 format")
+
 
 
 def test_migration_atomic_rollback():
