@@ -43,18 +43,15 @@ run_vitest() {
       if [ -n "$rel_target" ]; then
         npx vitest run "$rel_target" --reporter=junit --outputFile="$abs_xml_out"
       else
-        npx vitest run --project "$project" --reporter=junit --outputFile="$abs_xml_out"
+        npx vitest run --config="" --environment=node "electron/**/*.test.ts" "scripts/**.test.{ts,mjs}" --reporter=junit --outputFile="$abs_xml_out"
       fi
     else
       if [ -n "$rel_target" ]; then
-        npx vitest run "$rel_target"
+        npx vitest run --config="" --environment=node "$rel_target"
       else
-        npx vitest run --project "$project"
+        npx vitest run --config="" --environment=node "electron/**/*.test.ts" "scripts/**.test.{ts,mjs}"
       fi
     fi
-
-
-
   )
   
   local val=$?
