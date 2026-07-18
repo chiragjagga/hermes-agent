@@ -3,7 +3,7 @@ import path from 'node:path'
 import os from 'node:os'
 import { test } from 'vitest'
 
-import { resolveHermesHomePath, resolveUserDataPath } from './backend-env'
+import { resolveHermesHomePath, resolveUserDataPath, buildDesktopBackendEnv } from './backend-env'
 
 
 test('resolveUserDataPath: returns process.env.HERMES_USERDATA if configured', () => {
@@ -95,7 +95,6 @@ test('resolveHermesHomePath: resolves to default platform-native path on linux',
 })
 
 test('buildDesktopBackendEnv: propagates custom hermesHome to the backend process environment configuration', () => {
-  const { buildDesktopBackendEnv } = require('./backend-env')
   const customHome = '/tmp/custom-home'
   const backendEnv = buildDesktopBackendEnv({
     hermesHome: customHome,
