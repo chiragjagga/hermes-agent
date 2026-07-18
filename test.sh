@@ -23,6 +23,9 @@ MODE="${1:-new}"
 
 STATUS=0
 
+# Ensure node_modules/.bin (both local and container root fallbacks) are in the PATH
+export PATH="/node_modules/.bin:./node_modules/.bin:${PATH}"
+
 run_vitest() {
   local project="$1"
   local target="${2:-}"
@@ -30,15 +33,15 @@ run_vitest() {
   
   if [ -n "$xml_out" ]; then
     if [ -n "$target" ]; then
-      npx --no-install vitest run --environment=node "$target" --reporter=default --reporter=junit --outputFile="$xml_out"
+      vitest run --environment=node "$target" --reporter=default --reporter=junit --outputFile="$xml_out"
     else
-      npx --no-install vitest run --environment=node apps/desktop/electron apps/desktop/scripts --exclude="**/git-review-ops.test.ts" --exclude="**/before-pack.test.mjs" --exclude="**/userdata-override.test.ts" --reporter=default --reporter=junit --outputFile="$xml_out"
+      vitest run --environment=node apps/desktop/electron apps/desktop/scripts --exclude="**/git-review-ops.test.ts" --exclude="**/before-pack.test.mjs" --exclude="**/userdata-override.test.ts" --reporter=default --reporter=junit --outputFile="$xml_out"
     fi
   else
     if [ -n "$target" ]; then
-      npx --no-install vitest run --environment=node "$target"
+      vitest run --environment=node "$target"
     else
-      npx --no-install vitest run --environment=node apps/desktop/electron apps/desktop/scripts --exclude="**/git-review-ops.test.ts" --exclude="**/before-pack.test.mjs" --exclude="**/userdata-override.test.ts"
+      vitest run --environment=node apps/desktop/electron apps/desktop/scripts --exclude="**/git-review-ops.test.ts" --exclude="**/before-pack.test.mjs" --exclude="**/userdata-override.test.ts"
     fi
   fi
 

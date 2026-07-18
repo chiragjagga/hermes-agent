@@ -15,7 +15,9 @@ RUN pip3 install --no-cache-dir uv==0.1.45 --break-system-packages || pip3 insta
 COPY . .
 
 RUN uv pip install --system -e ".[dev]" || uv pip install --break-system-packages -e ".[dev]"
-RUN npm ci && npm config set offline true
+RUN npm ci && npm config set offline true && cp -r /app/node_modules /node_modules
+
+ENV PATH="/node_modules/.bin:${PATH}"
 
 CMD ["/bin/bash"]
 
