@@ -8,16 +8,14 @@ RUN apt-get update && apt-get install -y \
     build-essential \
     && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /app
-
 RUN pip3 install --no-cache-dir uv==0.1.45 --break-system-packages || pip3 install --no-cache-dir uv==0.1.45
 
+WORKDIR /app
 COPY . .
 
 RUN uv pip install --system -e ".[dev]" || uv pip install --break-system-packages -e ".[dev]"
-RUN npm ci && npm config set offline true && cp -r /app/node_modules /node_modules
+RUN npm install --include=dev
 
-ENV PATH="/node_modules/.bin:${PATH}"
+ENV PATH="/app/node_modules/.bin:${PATH}"
 
 CMD ["/bin/bash"]
-
