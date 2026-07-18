@@ -5,7 +5,11 @@ RUN pip3 install --no-cache-dir uv==0.1.45 --break-system-packages || pip3 insta
 WORKDIR /app
 COPY . .
 
-RUN uv pip install --system --frozen -e ".[dev]" || uv pip install --break-system-packages --frozen -e ".[dev]"
+# Install exact-pinned dependencies directly from pyproject.toml, 
+# then install the local package editably with --no-deps to avoid float resolution.
+RUN (uv pip install --system -r pyproject.toml --extra dev || uv pip install --break-system-packages -r pyproject.toml --extra dev) && \
+    (uv pip install --system -e ".[dev]" --no-deps || uv pip install --break-system-packages -e ".[dev]" --no-deps)
+
 RUN npm ci --include=dev
 
 ENV PATH="/app/node_modules/.bin:${PATH}"
