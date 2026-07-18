@@ -1,4 +1,5 @@
 import path from 'node:path'
+import os from 'node:os'
 
 // Match the POSIX fallback surface used by the Python terminal environment.
 // macOS apps launched from Finder/Dock often inherit only /usr/bin:/bin:/usr/sbin:/sbin,
@@ -114,6 +115,49 @@ function buildDesktopBackendEnv({
   }
 }
 
+function resolveUserDataPath({
+  env = process.env,
+  platform = process.platform,
+  getPath
+}: {
+  env?: Record<string, string | undefined>
+  platform?: string
+  getPath: (name: string) => string
+}): string {
+  const customUserData = env.HERMES_USERDATA || env.HERMES_DESKTOP_USER_DATA_DIR
+  if (customUserData) {
+    return path.resolve(customUserData)
+  }
+  return path.resolve(getPath('userData'))
+}
+
+function resolveHermesHomePath({
+  env = process.env,
+  userDataDir,
+  platform = process.platform,
+  getPath
+}: {
+  env?: Record<string, string | undefined>
+  userDataDir: string
+  platform?: string
+  getPath: (name: string) => string
+}): string {
+  if (env.HERMES_HOME) {
+    return path.resolve(env.HERMES_HOME)
+  }
+  const defaultUserData = path.resolve(getPath('userData'))
+  const currentUserData = path.resolve(userDataDir)
+  if (currentUserData !== defaultUserData) {
+    return path.join(currentUserData, 'hermes-home')
+  }
+  if (platform === 'win32') {
+    const localAppData = env.LOCALAPPDATA
+    const base = localAppData ? localAppData : path.join(os.homedir(), 'AppData', 'Local')
+    return path.resolve(path.join(base, 'hermes'))
+  }
+  return path.resolve(path.join(os.homedir(), '.hermes'))
+}
+
 export {
   appendUniquePathEntries,
   buildDesktopBackendEnv,
@@ -121,5 +165,8 @@ export {
   delimiterForPlatform,
   normalizeHermesHomeRoot,
   pathEnvKey,
-  POSIX_SANE_PATH_ENTRIES
+  POSIX_SANE_PATH_ENTRIES,
+  resolveUserDataPath,
+  resolveHermesHomePath
 }
+

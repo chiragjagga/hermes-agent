@@ -55,16 +55,19 @@ def _get_platform_default_hermes_home() -> Path:
 def _hermes_home_from_env() -> Path:
     """Resolve HERMES_HOME from the process environment only.
 
-    Reads the ``HERMES_HOME`` env var, falling back to the platform-native
-    default.  Deliberately ignores the context-local override installed by
-    :func:`set_hermes_home_override`, so this reflects the process/launch
-    scope rather than a per-task profile.  Shared by :func:`get_hermes_home`
-    and :func:`get_process_hermes_home` so the two never drift.
+    Reads the ``HERMES_HOME`` env var, falling back to ``HERMES_USERDATA`` / ``HERMES_DESKTOP_USER_DATA_DIR``,
+    and finally to the platform-native default.
     """
     val = os.environ.get("HERMES_HOME", "").strip()
     if val:
-        return Path(val)
+        return Path(val).resolve()
+    
+    userdata = os.environ.get("HERMES_USERDATA", "").strip() or os.environ.get("HERMES_DESKTOP_USER_DATA_DIR", "").strip()
+    if userdata:
+        return (Path(userdata) / "hermes-home").resolve()
+        
     return _get_platform_default_hermes_home()
+
 
 
 def _warn_profile_fallback_once() -> None:

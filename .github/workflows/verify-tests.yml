@@ -18,12 +18,19 @@ jobs:
 
 
 
-      - name: Run Existing Tests (Base Regression)
+      - name: Run Base Checks (Simulating Base Commit)
         run: |
+          # Fetch origin/main to resolve base commit files
+          git fetch origin main || true
+          
+          # Temporarily restore implementation files to main branch state (base)
+          # while keeping our test harness files untouched.
+          git checkout origin/main -- apps/desktop/electron/backend-env.ts hermes_constants.py hermes_logging.py hermes_state.py hermes_cli/main.py cli.py || true
+          
+          echo "=== Phase 1: Base regression checks (must pass) ==="
           docker run --rm --network none -v ${{ github.workspace }}:/app -v /app/node_modules verify-runner bash ./test.sh --output_path results.xml base
-
-      - name: Run Challenge Tests (Verify They Fail on Base)
-        run: |
+          
+          echo "=== Phase 2: Challenge tests on base (must fail) ==="
           if docker run --rm --network none -v ${{ github.workspace }}:/app -v /app/node_modules verify-runner bash ./test.sh --output_path results.xml new; then
             echo "Error: Challenge tests passed on the base commit, but they must fail!" >&2
             exit 1
@@ -31,8 +38,13 @@ jobs:
             echo "Success: Challenge tests correctly failed on the base commit."
           fi
 
-
-
-
-
-
+      - name: Run Solution Checks (Simulating Solution Commit)
+        run: |
+          # Restore implementation files to our branch head (solution)
+          git checkout HEAD -- apps/desktop/electron/backend-env.ts hermes_constants.py hermes_logging.py hermes_state.py hermes_cli/main.py cli.py || true
+          
+          echo "=== Phase 3: Base regression checks on solution (must pass) ==="
+          docker run --rm --network none -v ${{ github.workspace }}:/app -v /app/node_modules verify-runner bash ./test.sh --output_path results.xml base
+          
+          echo "=== Phase 4: Challenge tests on solution (must pass) ==="
+          docker run --rm --network none -v ${{ github.workspace }}:/app -v /app/node_modules verify-runner bash ./test.sh --output_path results.xml new
