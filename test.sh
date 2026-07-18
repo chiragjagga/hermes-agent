@@ -30,10 +30,11 @@ run_vitest() {
   
   if [ -n "$xml_out" ]; then
     if [ -n "$target" ]; then
-      npx vitest run --environment=node "$target" --reporter=junit --outputFile="$xml_out"
+      npx vitest run --environment=node "$target" --reporter=default --reporter=junit --outputFile="$xml_out"
     else
-      npx vitest run --environment=node "apps/desktop/electron/**/*.test.ts" "apps/desktop/scripts/**/*.test.ts" --reporter=junit --outputFile="$xml_out"
+      npx vitest run --environment=node "apps/desktop/electron/**/*.test.ts" "apps/desktop/scripts/**/*.test.ts" --reporter=default --reporter=junit --outputFile="$xml_out"
     fi
+
   else
     if [ -n "$target" ]; then
       npx vitest run --environment=node "$target"
@@ -45,9 +46,13 @@ run_vitest() {
   local val=$?
   if [ $val -ne 0 ]; then
     STATUS=$val
+    if [ -n "$xml_out" ] && [ -f "$xml_out" ]; then
+      echo "=== Vitest Failure Report: Printing $xml_out ==="
+      cat "$xml_out"
+      echo "================================================"
+    fi
   fi
 }
-
 
 
 run_pytest() {
@@ -56,8 +61,14 @@ run_pytest() {
   local val=$?
   if [ $val -ne 0 ]; then
     STATUS=$val
+    if [ -f "$OUTPUT_PATH" ]; then
+      echo "=== Pytest Failure Report: Printing $OUTPUT_PATH ==="
+      cat "$OUTPUT_PATH"
+      echo "==============================================="
+    fi
   fi
 }
+
 
 case "$MODE" in
   base)
