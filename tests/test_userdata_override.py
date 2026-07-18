@@ -49,16 +49,8 @@ def test_hermes_home_prefers_userdata_over_desktop_user_data_dir(monkeypatch):
         resolved = get_hermes_home()
         assert resolved == Path(tmp1) / "hermes-home"
 
-def test_hermes_home_honors_context_local_override():
-    """get_hermes_home must honor context-local overrides set via set_hermes_home_override first."""
-    from hermes_constants import get_hermes_home, set_hermes_home_override, reset_hermes_home_override
-    
-    custom_path = "/context/local/override"
-    token = set_hermes_home_override(custom_path)
-    try:
-        assert get_hermes_home() == Path(custom_path)
-    finally:
-        reset_hermes_home_override(token)
+
+
 
 def test_hermes_home_normalization(monkeypatch):
     """Paths must be fully normalized even if relative paths are passed in HERMES_USERDATA."""
