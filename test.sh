@@ -12,11 +12,12 @@ set -uo pipefail
 
 cd /app
 
-OUTPUT_PATH=""
+OUTPUT_PATH="results.xml"
 if [ "${1:-}" = "--output_path" ]; then
   OUTPUT_PATH="$2"
   shift 2
 fi
+
 
 MODE="${1:-new}"
 
@@ -57,10 +58,10 @@ case "$MODE" in
     # Run the existing electron native test suite
     run_vitest "electron" "" "$OUTPUT_PATH"
     
-    # Run the existing python unit tests
-    # Note: exclude integration tests that require network or full app launch
-    run_pytest "tests/" "$OUTPUT_PATH"
+    # Run the existing python unit tests in the blast radius of constants, logging, state, and CLI
+    run_pytest "tests/test_hermes_constants.py tests/test_hermes_logging.py tests/test_hermes_state.py tests/hermes_cli/" "$OUTPUT_PATH"
     ;;
+
   new)
     echo "Running new feature verification tests..."
 

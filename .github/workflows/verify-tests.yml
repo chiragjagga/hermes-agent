@@ -18,16 +18,18 @@ jobs:
 
       - name: Run Existing Tests (Base Regression)
         run: |
-          docker run --rm -v ${{ github.workspace }}:/app verify-runner bash ./test.sh base
+          docker run --rm --network none -v ${{ github.workspace }}:/app verify-runner bash ./test.sh --output_path results.xml base
 
       - name: Run Challenge Tests (Verify They Fail on Base)
         run: |
-          if docker run --rm -v ${{ github.workspace }}:/app verify-runner bash ./test.sh new; then
+          if docker run --rm --network none -v ${{ github.workspace }}:/app verify-runner bash ./test.sh --output_path results.xml new; then
             echo "Error: Challenge tests passed on the base commit, but they must fail!" >&2
             exit 1
           else
             echo "Success: Challenge tests correctly failed on the base commit."
           fi
+
+
 
 
 
