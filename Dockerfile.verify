@@ -1,0 +1,32 @@
+FROM public.ecr.aws/d3j8x8q7/olympus-base-typescript:latest
+
+# Install Python 3 and build tools if not present
+RUN apt-get update && apt-get install -y \
+    python3 \
+    python3-pip \
+    python3-venv \
+    git \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Install uv for fast Python package resolution
+RUN pip3 install --no-cache-dir uv --break-system-packages || pip3 install --no-cache-dir uv
+
+# Copy only configuration and dependency lockfiles to cache layers
+COPY package.json package-lock.json* pyproject.toml uv.lock* setup.py* ./
+
+# Create minimal dummy directories so editable install -e . does not fail
+RUN mkdir -p agent tools hermes_cli gateway tui_gateway cron acp_adapter plugins providers tests
+
+# Install dependencies using uv and npm
+RUN uv pip install --system -e ".[dev]" || uv pip install --break-system-packages -e ".[dev]"
+RUN npm install
+
+# Command defaults to bash shell
+CMD ["/bin/bash"]
+
+
+
+

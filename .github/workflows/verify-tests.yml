@@ -1,0 +1,32 @@
+name: Verify User Data and Migration Tests
+
+on:
+  push:
+    branches:
+      - '**'
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Build Docker Image
+        run: |
+          docker build -f Dockerfile.verify -t verify-runner .
+
+      - name: Run Existing Tests (Base Regression)
+        run: |
+          docker run --rm -v ${{ github.workspace }}:/app verify-runner ./test.sh base
+
+      - name: Run Challenge Tests (Verify They Fail on Base)
+        run: |
+          if docker run --rm -v ${{ github.workspace }}:/app verify-runner ./test.sh new; then
+            echo "Error: Challenge tests passed on the base commit, but they must fail!" >&2
+            exit 1
+          else
+            echo "Success: Challenge tests correctly failed on the base commit."
+          fi
+
+
