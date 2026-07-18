@@ -28,38 +28,26 @@ run_vitest() {
   local target="${2:-}"
   local xml_out="${3:-$OUTPUT_PATH}"
   
-  # Resolve output path to absolute since we execute inside a subdirectory
-  local abs_xml_out=""
   if [ -n "$xml_out" ]; then
-    abs_xml_out=$(readlink -f "$xml_out" 2>/dev/null || realpath "$xml_out")
-  fi
-  
-  (
-    cd apps/desktop
-    # Strip apps/desktop/ prefix if present to match the vitest directory context
-    local rel_target="${target#apps/desktop/}"
-    
-    if [ -n "$abs_xml_out" ]; then
-      if [ -n "$rel_target" ]; then
-        npx vitest run --config=false --environment=node "$rel_target" --reporter=junit --outputFile="$abs_xml_out"
-      else
-        npx vitest run --config=false --environment=node "electron/**/*.test.ts" "scripts/**.test.{ts,mjs}" --reporter=junit --outputFile="$abs_xml_out"
-      fi
+    if [ -n "$target" ]; then
+      npx vitest run --environment=node "$target" --reporter=junit --outputFile="$xml_out"
     else
-      if [ -n "$rel_target" ]; then
-        npx vitest run --config=false --environment=node "$rel_target"
-      else
-        npx vitest run --config=false --environment=node "electron/**/*.test.ts" "scripts/**.test.{ts,mjs}"
-      fi
+      npx vitest run --environment=node "apps/desktop/electron/**/*.test.ts" "apps/desktop/scripts/**/*.test.ts" --reporter=junit --outputFile="$xml_out"
     fi
-
-  )
+  else
+    if [ -n "$target" ]; then
+      npx vitest run --environment=node "$target"
+    else
+      npx vitest run --environment=node "apps/desktop/electron/**/*.test.ts" "apps/desktop/scripts/**/*.test.ts"
+    fi
+  fi
   
   local val=$?
   if [ $val -ne 0 ]; then
     STATUS=$val
   fi
 }
+
 
 
 run_pytest() {
