@@ -30,15 +30,15 @@ run_vitest() {
   
   if [ -n "$xml_out" ]; then
     if [ -n "$target" ]; then
-      npx vitest run --environment=node "$target" --reporter=default --reporter=junit --outputFile="$xml_out"
+      npx --no-install vitest run --environment=node "$target" --reporter=default --reporter=junit --outputFile="$xml_out"
     else
-      npx vitest run --environment=node apps/desktop/electron apps/desktop/scripts --exclude="**/git-review-ops.test.ts" --exclude="**/before-pack.test.mjs" --exclude="**/userdata-override.test.ts" --reporter=default --reporter=junit --outputFile="$xml_out"
+      npx --no-install vitest run --environment=node apps/desktop/electron apps/desktop/scripts --exclude="**/git-review-ops.test.ts" --exclude="**/before-pack.test.mjs" --exclude="**/userdata-override.test.ts" --reporter=default --reporter=junit --outputFile="$xml_out"
     fi
   else
     if [ -n "$target" ]; then
-      npx vitest run --environment=node "$target"
+      npx --no-install vitest run --environment=node "$target"
     else
-      npx vitest run --environment=node apps/desktop/electron apps/desktop/scripts --exclude="**/git-review-ops.test.ts" --exclude="**/before-pack.test.mjs" --exclude="**/userdata-override.test.ts"
+      npx --no-install vitest run --environment=node apps/desktop/electron apps/desktop/scripts --exclude="**/git-review-ops.test.ts" --exclude="**/before-pack.test.mjs" --exclude="**/userdata-override.test.ts"
     fi
   fi
 
