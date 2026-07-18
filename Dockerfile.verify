@@ -21,9 +21,7 @@ RUN mkdir -p agent tools hermes_cli gateway tui_gateway cron acp_adapter plugins
 
 # Install dependencies using uv and npm
 RUN uv pip install --system -e ".[dev]" || uv pip install --break-system-packages -e ".[dev]"
-RUN npm install --save-dev vitest
-
-
+RUN npm install -g vitest
 
 # Command defaults to bash shell
 CMD ["/bin/bash"]

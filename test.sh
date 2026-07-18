@@ -29,10 +29,18 @@ run_vitest() {
   local target="${2:-}"
   local xml_out="${3:-$OUTPUT_PATH}"
   
-  if [ -n "$target" ]; then
-    npx vitest run "$target" --reporter=junit --outputFile="$xml_out"
+  if [ -n "$xml_out" ]; then
+    if [ -n "$target" ]; then
+      vitest run "$target" --reporter=junit --outputFile="$xml_out"
+    else
+      vitest run --project "$project" --reporter=junit --outputFile="$xml_out"
+    fi
   else
-    npx vitest run --project "$project" --reporter=junit --outputFile="$xml_out"
+    if [ -n "$target" ]; then
+      vitest run "$target"
+    else
+      vitest run --project "$project"
+    fi
   fi
   
   local val=$?
