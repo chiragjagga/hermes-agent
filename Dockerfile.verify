@@ -1,20 +1,12 @@
-FROM public.ecr.aws/d3j8x8q7/olympus-base-typescript:latest
-
-RUN apt-get update && apt-get install -y \
-    python3 \
-    python3-pip \
-    python3-venv \
-    git \
-    build-essential \
-    && rm -rf /var/lib/apt/lists/*
+FROM public.ecr.aws/d3j8x8q7/olympus-base:latest
 
 RUN pip3 install --no-cache-dir uv==0.1.45 --break-system-packages || pip3 install --no-cache-dir uv==0.1.45
 
 WORKDIR /app
 COPY . .
 
-RUN uv pip install --system -e ".[dev]" || uv pip install --break-system-packages -e ".[dev]"
-RUN npm install --include=dev
+RUN uv pip install --system --frozen -e ".[dev]" || uv pip install --break-system-packages --frozen -e ".[dev]"
+RUN npm ci --include=dev
 
 ENV PATH="/app/node_modules/.bin:${PATH}"
 

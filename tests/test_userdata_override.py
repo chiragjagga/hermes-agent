@@ -27,6 +27,39 @@ def test_hermes_home_fallback_to_userdata(monkeypatch):
         resolved = get_hermes_home()
         assert resolved == Path(tmpdir) / "hermes-home"
 
+def test_hermes_home_fallback_to_desktop_user_data_dir(monkeypatch):
+    """If HERMES_HOME and HERMES_USERDATA are unset, fallback to HERMES_DESKTOP_USER_DATA_DIR/hermes-home."""
+    monkeypatch.delenv("HERMES_HOME", raising=False)
+    monkeypatch.delenv("HERMES_USERDATA", raising=False)
+    with tempfile.TemporaryDirectory() as tmpdir:
+        monkeypatch.setenv("HERMES_DESKTOP_USER_DATA_DIR", tmpdir)
+        
+        from hermes_constants import get_hermes_home
+        resolved = get_hermes_home()
+        assert resolved == Path(tmpdir) / "hermes-home"
+
+def test_hermes_home_prefers_userdata_over_desktop_user_data_dir(monkeypatch):
+    """If both HERMES_USERDATA and HERMES_DESKTOP_USER_DATA_DIR are set, HERMES_USERDATA must take precedence."""
+    monkeypatch.delenv("HERMES_HOME", raising=False)
+    with tempfile.TemporaryDirectory() as tmp1, tempfile.TemporaryDirectory() as tmp2:
+        monkeypatch.setenv("HERMES_USERDATA", tmp1)
+        monkeypatch.setenv("HERMES_DESKTOP_USER_DATA_DIR", tmp2)
+        
+        from hermes_constants import get_hermes_home
+        resolved = get_hermes_home()
+        assert resolved == Path(tmp1) / "hermes-home"
+
+def test_hermes_home_honors_context_local_override():
+    """get_hermes_home must honor context-local overrides set via set_hermes_home_override first."""
+    from hermes_constants import get_hermes_home, set_hermes_home_override, reset_hermes_home_override
+    
+    custom_path = "/context/local/override"
+    token = set_hermes_home_override(custom_path)
+    try:
+        assert get_hermes_home() == Path(custom_path)
+    finally:
+        reset_hermes_home_override(token)
+
 def test_hermes_home_normalization(monkeypatch):
     """Paths must be fully normalized even if relative paths are passed in HERMES_USERDATA."""
     monkeypatch.delenv("HERMES_HOME", raising=False)
@@ -37,6 +70,7 @@ def test_hermes_home_normalization(monkeypatch):
     resolved = get_hermes_home()
     assert resolved.is_absolute()
     assert resolved == Path(relative_path).resolve() / "hermes-home"
+
 
 
 # ─── Migration Utility Tests ───

@@ -32,7 +32,7 @@ import nodePty from 'node-pty'
 import { stopBackendChild as stopBackendChildImpl } from './backend-child'
 import { dashboardFallbackArgs, sourceDeclaresServe } from './backend-command'
 import { createBackendConnectionState } from './backend-connection-state'
-import { buildDesktopBackendEnv, normalizeHermesHomeRoot } from './backend-env'
+import { buildDesktopBackendEnv, normalizeHermesHomeRoot, resolveUserDataPath, resolveHermesHomePath } from './backend-env'
 import { canImportHermesCli, verifyHermesCli } from './backend-probes'
 import { waitForDashboardPortAnnouncement } from './backend-ready'
 import { shouldLatchBackendStartFailure } from './backend-start-failure'
@@ -164,12 +164,13 @@ import { isPackagedInstallPath as isPackagedInstallPathUnderRoots } from './work
 import { readWslWindowsClipboardImage } from './wsl-clipboard-image'
 import { resolvePickerDefaultPath } from './wsl-path-bridge'
 
-const USER_DATA_OVERRIDE = process.env.HERMES_DESKTOP_USER_DATA_DIR
+const USER_DATA_OVERRIDE = (process.env.HERMES_USERDATA || process.env.HERMES_DESKTOP_USER_DATA_DIR)
+  ? resolveUserDataPath({ env: process.env, platform: process.platform, getPath: (name) => app.getPath(name) })
+  : null
 
 if (USER_DATA_OVERRIDE) {
-  const resolvedUserData = path.resolve(USER_DATA_OVERRIDE)
-  fs.mkdirSync(resolvedUserData, { recursive: true })
-  app.setPath('userData', resolvedUserData)
+  fs.mkdirSync(USER_DATA_OVERRIDE, { recursive: true })
+  app.setPath('userData', USER_DATA_OVERRIDE)
 }
 
 const DEV_SERVER = process.env.HERMES_DESKTOP_DEV_SERVER

@@ -103,7 +103,7 @@ function buildDesktopBackendEnv({
   const currentPythonPath = currentEnv?.PYTHONPATH || ''
   const key = pathEnvKey(currentEnv, platform)
 
-  return {
+  const env: Record<string, string> = {
     PYTHONPATH: appendUniquePathEntries([...pythonPathEntries, currentPythonPath], { delimiter }),
     [key]: buildDesktopBackendPath({
       hermesHome,
@@ -113,6 +113,18 @@ function buildDesktopBackendEnv({
       pathModule
     })
   }
+
+  if (currentEnv?.HERMES_USERDATA) {
+    env.HERMES_USERDATA = currentEnv.HERMES_USERDATA
+  }
+  if (currentEnv?.HERMES_DESKTOP_USER_DATA_DIR) {
+    env.HERMES_DESKTOP_USER_DATA_DIR = currentEnv.HERMES_DESKTOP_USER_DATA_DIR
+  }
+  if (currentEnv?.HERMES_HOME) {
+    env.HERMES_HOME = currentEnv.HERMES_HOME
+  }
+
+  return env
 }
 
 function resolveUserDataPath({
@@ -144,6 +156,10 @@ function resolveHermesHomePath({
 }): string {
   if (env.HERMES_HOME) {
     return path.resolve(env.HERMES_HOME)
+  }
+  const customUserData = env.HERMES_USERDATA || env.HERMES_DESKTOP_USER_DATA_DIR
+  if (customUserData) {
+    return path.join(path.resolve(customUserData), 'hermes-home')
   }
   const defaultUserData = path.resolve(getPath('userData'))
   const currentUserData = path.resolve(userDataDir)

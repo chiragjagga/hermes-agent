@@ -40,6 +40,22 @@ test('resolveUserDataPath: prefers HERMES_USERDATA over HERMES_DESKTOP_USER_DATA
   assert.equal(resolved, path.resolve(customUserData))
 })
 
+test('resolveUserDataPath: falls back to platform default when no env variables are set', () => {
+  const defaultUserData = '/default/userData/path'
+  const resolved = resolveUserDataPath({
+    env: {},
+    platform: 'linux',
+    getPath: (name) => {
+      if (name === 'userData') {
+        return defaultUserData
+      }
+      return '/default/home'
+    }
+  })
+  assert.equal(resolved, path.resolve(defaultUserData))
+})
+
+
 test('resolveHermesHomePath: resolves to customUserData/hermes-home if userData is overridden', () => {
   const customUserData = '/tmp/custom-userdata'
   const resolvedHome = resolveHermesHomePath({
@@ -94,15 +110,28 @@ test('resolveHermesHomePath: resolves to default platform-native path on linux',
   assert.equal(resolvedHome, path.resolve(path.join(os.homedir(), '.hermes')))
 })
 
-test('buildDesktopBackendEnv: propagates custom hermesHome to the backend process environment configuration', () => {
+test('buildDesktopBackendEnv: propagates custom hermesHome and userData configuration env variables to child processes', () => {
   const customHome = '/tmp/custom-home'
+  const customUserData = '/tmp/custom-userdata'
+  const customDesktop = '/tmp/custom-desktop'
+  const explicitHome = '/tmp/explicit-home'
+  
   const backendEnv = buildDesktopBackendEnv({
     hermesHome: customHome,
     pythonPathEntries: [],
     venvRoot: '/tmp/venv',
+    currentEnv: {
+      HERMES_USERDATA: customUserData,
+      HERMES_DESKTOP_USER_DATA_DIR: customDesktop,
+      HERMES_HOME: explicitHome
+    },
     platform: 'linux'
   })
+  
   assert.ok(backendEnv.PATH.includes(path.join(customHome, 'node', 'bin')))
+  assert.equal(backendEnv.HERMES_USERDATA, customUserData)
+  assert.equal(backendEnv.HERMES_DESKTOP_USER_DATA_DIR, customDesktop)
+  assert.equal(backendEnv.HERMES_HOME, explicitHome)
 })
 
 test('Integration: Electron app sets userData path when env variables are configured', () => {
