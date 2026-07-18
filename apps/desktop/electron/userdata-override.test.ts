@@ -146,11 +146,13 @@ test('Integration: Electron app sets userData path when env variables are config
   }
   
   const env = { HERMES_USERDATA: './custom-relative-userData' }
-  const customUserData = env.HERMES_USERDATA
-  if (customUserData) {
-    fakeApp.setPath('userData', path.resolve(customUserData))
-  }
+  const resolved = resolveUserDataPath({
+    env,
+    platform: 'linux',
+    getPath: (name) => fakeApp.getPath(name)
+  })
   
+  fakeApp.setPath('userData', resolved)
   assert.equal(fakeApp.getPath('userData'), path.resolve('./custom-relative-userData'))
 })
 
