@@ -49,6 +49,17 @@ def perform_migration(from_dir: Path, to_dir: Path, force: bool = False) -> None
                 shutil.copy2(src_file, dest_file)
                 created_paths.append(dest_file)
                 
+        # Write .metadata.json with the migration timestamp
+        import json
+        import datetime
+        metadata_file = to_dir / ".metadata.json"
+        metadata_data = {
+            "migration_timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat()
+        }
+        with open(metadata_file, "w", encoding="utf-8") as f:
+            json.dump(metadata_data, f)
+        created_paths.append(metadata_file)
+                
     except Exception as e:
         # Rollback: delete created files/directories in reverse order
         for path in reversed(created_paths):
@@ -60,3 +71,4 @@ def perform_migration(from_dir: Path, to_dir: Path, force: bool = False) -> None
             except Exception:
                 pass
         raise e
+

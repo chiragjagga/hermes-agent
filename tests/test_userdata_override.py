@@ -82,6 +82,15 @@ def test_migration_atomic_success():
         
         assert (dest / "connection.json").read_text(encoding="utf-8") == '{"platform": "wechat"}'
         assert (dest / "hermes-home" / "session.db").read_text(encoding="utf-8") == "sqlite db content"
+        
+        # Verify .metadata.json is written and contains migration_timestamp
+        metadata_file = dest / ".metadata.json"
+        assert metadata_file.exists()
+        import json
+        with open(metadata_file, "r", encoding="utf-8") as f:
+            meta = json.load(f)
+        assert "migration_timestamp" in meta
+
 
 def test_migration_atomic_rollback():
     """If copy fails halfway, migration must completely roll back and restore the destination to its clean state."""

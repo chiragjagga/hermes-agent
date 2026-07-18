@@ -27,6 +27,9 @@ jobs:
           # while keeping our test harness files untouched.
           git checkout origin/main -- apps/desktop/electron/backend-env.ts hermes_constants.py hermes_logging.py hermes_state.py hermes_cli/main.py cli.py || true
           
+          # Temporarily rename new solution files so they are absent in base run
+          mv hermes_cli/migrate.py hermes_cli/migrate.py.bak || true
+          
           echo "=== Phase 1: Base regression checks (must pass) ==="
           docker run --rm --network none -v ${{ github.workspace }}:/app -v /app/node_modules verify-runner bash ./test.sh --output_path results.xml base
           
@@ -43,8 +46,12 @@ jobs:
           # Restore implementation files to our branch head (solution)
           git checkout HEAD -- apps/desktop/electron/backend-env.ts hermes_constants.py hermes_logging.py hermes_state.py hermes_cli/main.py cli.py || true
           
+          # Restore new solution files
+          mv hermes_cli/migrate.py.bak hermes_cli/migrate.py || true
+          
           echo "=== Phase 3: Base regression checks on solution (must pass) ==="
           docker run --rm --network none -v ${{ github.workspace }}:/app -v /app/node_modules verify-runner bash ./test.sh --output_path results.xml base
           
           echo "=== Phase 4: Challenge tests on solution (must pass) ==="
           docker run --rm --network none -v ${{ github.workspace }}:/app -v /app/node_modules verify-runner bash ./test.sh --output_path results.xml new
+
