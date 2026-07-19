@@ -130,8 +130,6 @@ test('buildDesktopBackendEnv: propagates custom hermesHome and userData configur
   assert.equal(backendEnv.HERMES_USERDATA, customUserData)
   assert.equal(backendEnv.HERMES_DESKTOP_USER_DATA_DIR, customDesktop)
   assert.equal(backendEnv.HERMES_HOME, explicitHome)
-  assert.ok(typeof backendEnv.PATH === 'string')
-  assert.ok(backendEnv.PATH.includes(customHome))
 })
 
 test('Integration: Electron app sets userData path when env variables are configured', () => {

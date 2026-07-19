@@ -141,15 +141,16 @@ def test_migration_atomic_rollback():
         (src / "hermes-home").mkdir()
         (src / "hermes-home" / "session.db").write_text("sqlite database", encoding="utf-8")
         
-        original_copy = shutil.copy2
+        import builtins
+        original_open = builtins.open
         
-        # Mock copy to raise an exception specifically during the nested DB copy
-        def faulty_copy(s, d):
-            if "session.db" in str(s):
+        # Mock open to raise an exception specifically when writing session.db
+        def faulty_open(file, mode="r", *args, **kwargs):
+            if "session.db" in str(file) and "w" in mode:
                 raise IOError("Disk full or permission denied")
-            return original_copy(s, d)
+            return original_open(file, mode, *args, **kwargs)
             
-        with mock.patch("shutil.copy2", side_effect=faulty_copy):
+        with mock.patch("builtins.open", side_effect=faulty_open):
             with pytest.raises(IOError):
                 perform_migration(from_dir=src, to_dir=dest)
 
