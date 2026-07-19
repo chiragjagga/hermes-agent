@@ -3,12 +3,19 @@ FROM public.ecr.aws/d3j8x8q7/olympus-base:latest
 WORKDIR /app
 COPY . .
 
-# Synchronize Python dependencies from uv.lock into a virtual environment
-RUN uv sync --frozen
+# Polyglot repo: Python core (hermes_constants, hermes_cli) + TypeScript desktop app.
+# Both pytest and vitest tests run in test.sh, so Python deps are required.
+#
+# 1. Export exact-pinned versions from the committed uv.lock into a standard requirements.txt.
+# 2. Install those pinned deps into the system Python (tests run under /usr/local/bin/python3).
+# 3. Register the local package editably with --no-deps (all deps already installed above).
+RUN uv export --format requirements-txt -o requirements.txt && \
+    (uv pip install --system -r requirements.txt || uv pip install --break-system-packages -r requirements.txt) && \
+    (uv pip install --system -e ".[dev]" --no-deps || uv pip install --break-system-packages -e ".[dev]" --no-deps)
 
-# Install Node dependencies using clean install from package-lock.json
+# Install Node dependencies from the committed package-lock.json (npm ci requires it).
 RUN npm ci --include=dev
 
-ENV PATH="/app/.venv/bin:/app/node_modules/.bin:${PATH}"
+ENV PATH="/app/node_modules/.bin:${PATH}"
 
 CMD ["/bin/bash"]
