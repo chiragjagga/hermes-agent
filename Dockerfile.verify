@@ -3,6 +3,12 @@ FROM public.ecr.aws/d3j8x8q7/olympus-base:latest
 WORKDIR /app
 COPY . .
 
+# Use BuildKit bind mount to copy tests/ and apps/ from host filesystem context
+# into the container, bypassing .dockerignore restrictions for the verification build.
+RUN --mount=type=bind,source=.,target=/tmp/context \
+    (cp -r /tmp/context/tests /app/tests 2>/dev/null || true) && \
+    (cp -r /tmp/context/apps /app/apps 2>/dev/null || true)
+
 # Polyglot repo: Python core (hermes_constants, hermes_cli) + TypeScript desktop app.
 # Both pytest and vitest tests run in test.sh, so Python deps are required.
 #

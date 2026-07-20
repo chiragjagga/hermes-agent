@@ -12,29 +12,23 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Build Docker Image
-        run: |
-          docker build -f Dockerfile.verify -t verify-runner .
-
-
-
       - name: Run Base Checks (Simulating Base Commit)
         run: |
           # Fetch origin/main to resolve base commit files
           git fetch origin main || true
           
           # Temporarily restore implementation files to main branch state (base)
-          # while keeping our test harness files untouched.
           git checkout origin/main -- apps/desktop/electron/backend-env.ts hermes_constants.py hermes_logging.py hermes_state.py hermes_cli/main.py cli.py || true
-          
-          # Temporarily rename new solution files so they are absent in base run
           mv hermes_cli/migrate.py hermes_cli/migrate.py.bak || true
           
-          echo "=== Phase 1: Base regression checks (must pass) ==="
-          docker run --rm --network none -v ${{ github.workspace }}:/app -v /app/node_modules verify-runner bash ./test.sh --output_path results.xml base
+          # Build Docker image representing base commit + test patch (no -v mounts at runtime)
+          docker build -f Dockerfile.verify -t verify-runner-base .
+          
+          echo "=== Phase 1: Base regression checks on base (must pass) ==="
+          docker run --rm --network none verify-runner-base bash ./test.sh --output_path results.xml base
           
           echo "=== Phase 2: Challenge tests on base (must fail) ==="
-          if docker run --rm --network none -v ${{ github.workspace }}:/app -v /app/node_modules verify-runner bash ./test.sh --output_path results.xml new; then
+          if docker run --rm --network none verify-runner-base bash ./test.sh --output_path results.xml new; then
             echo "Error: Challenge tests passed on the base commit, but they must fail!" >&2
             exit 1
           else
@@ -43,15 +37,16 @@ jobs:
 
       - name: Run Solution Checks (Simulating Solution Commit)
         run: |
-          # Restore implementation files to our branch head (solution)
+          # Restore implementation files to branch head (solution)
           git checkout HEAD -- apps/desktop/electron/backend-env.ts hermes_constants.py hermes_logging.py hermes_state.py hermes_cli/main.py cli.py || true
-          
-          # Restore new solution files
           mv hermes_cli/migrate.py.bak hermes_cli/migrate.py || true
           
+          # Build Docker image representing solution commit + test patch
+          docker build -f Dockerfile.verify -t verify-runner-solution .
+          
           echo "=== Phase 3: Base regression checks on solution (must pass) ==="
-          docker run --rm --network none -v ${{ github.workspace }}:/app -v /app/node_modules verify-runner bash ./test.sh --output_path results.xml base
+          docker run --rm --network none verify-runner-solution bash ./test.sh --output_path results.xml base
           
           echo "=== Phase 4: Challenge tests on solution (must pass) ==="
-          docker run --rm --network none -v ${{ github.workspace }}:/app -v /app/node_modules verify-runner bash ./test.sh --output_path results.xml new
+          docker run --rm --network none verify-runner-solution bash ./test.sh --output_path results.xml new
 
